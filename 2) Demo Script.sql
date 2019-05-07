@@ -7,14 +7,16 @@ one result - one active request right now. Note that sp_whoisactive filters out 
 exec sp_whoisactive;
 
 
-SELECT   
-	DISTINCT SCHEMA_NAME(o.schema_id) as SchemaName
-	,o.name as ProcName
-FROM     syscomments AS c
-         INNER JOIN sys.objects AS o ON c.id = o.[object_id]
-         INNER JOIN sys.schemas AS s ON o.schema_id = s.schema_id
-WHERE    text LIKE '%waitfor delay ''00:20:00''%'
-ORDER BY  SCHEMA_NAME(o.schema_id),o.name;
+SELECT DISTINCT
+    o.name AS [Object_Name]
+    ,o.type_desc as [Object_Type]
+FROM sys.sql_modules        m 
+INNER JOIN sys.objects  
+    o ON m.object_id=o.object_id
+WHERE 
+    m.definition Like '%waitfor delay ''00:20:00''%'
+ORDER BY
+    2,1;
 
 /* @Get_full_inner_text example. This will return either the stored proc or batch the current query is a part of. */
 exec sp_WhoIsActive @get_full_inner_text = 1;
