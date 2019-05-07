@@ -67,22 +67,22 @@ exec sp_whoisactive @output_column_list = '[dd hh:mm:ss.mss][login_name][cpu][re
 
 
 /* Again, this works fine with columns added by other input parameters */
-exec sp_whoisactive @output_column_list = '[dd hh:mm:ss.mss][login_name][cpu][reads][writes][sql_text][query_plan]', @get_plans = 1;
+exec sp_whoisactive @output_column_list = '[dd hh:mm:ss.mss][login_name][cpu][reads][writes][sql_text][query_plan][collection_time][collection_time]', @get_plans = 1;
 
 /* Create your own lightweight monitoring tool using sp_whoisactive! 
 
 We can do this by using @return_schema to create a table to hold the output. */
 declare @schemaout VARCHAR(MAX)
 
-exec sp_whoisactive @output_column_list = '[dd hh:mm:ss.mss][login_name][cpu][reads][writes][sql_text][query_plan]', @get_plans = 1
+exec sp_whoisactive @output_column_list = '[dd hh:mm:ss.mss][login_name][cpu][reads][writes][sql_text][query_plan][collection_time]', @get_plans = 1
 	, @return_schema = 1, @schema = @schemaout output;
 
 select @schemaout
 
 /* Now we create the table itself. By default the table is a heap - if you are persisting data over a long period of time, best to add
 a PK / CI. */
-if not exists (Select 1 from sys.tables where  Schema_id = schema_id('Who') and name = 'SPActiveOutput')
-create table Who.SPActiveOutput 
+if not exists (Select 1 from sys.tables where  Schema_id = schema_id('Who') and name = 'SPWhoIsActiveOutput')
+create table Who.SPWhoIsActiveOutput 
 (
 	 ID int identity(1,1) primary key clustered
 	 , [dd hh:mm:ss.mss] varchar(8000) NULL
@@ -92,10 +92,11 @@ create table Who.SPActiveOutput
 	 ,[writes] varchar(30) NULL
 	 ,[sql_text] xml NULL
 	 ,[query_plan] xml NULL
+	 ,[collection_time] datetime not null
  );
 
  else
-	truncate table Who.SPActiveOutput;
+	truncate table Who.SPWhoIsActiveOutput;
 
  /* Now, we call sp_whoisactive and we point it to the table we just created.
  
@@ -103,11 +104,11 @@ create table Who.SPActiveOutput
  
  It does NOT check to ensure the table exists before inserting or that columns match - that's up to you. Adding an ID column for a PK / CI is fine. */
 
- exec sp_whoisactive @output_column_list = '[dd hh:mm:ss.mss][login_name][cpu][reads][writes][sql_text][query_plan]', @get_plans = 1,
-	@destination_table = 'Who.SpActiveOutput';
+ exec sp_whoisactive @output_column_list = '[dd hh:mm:ss.mss][login_name][cpu][reads][writes][sql_text][query_plan][collection_time]', @get_plans = 1,
+	@destination_table = 'Who.SPWhoIsActiveOutput';
 go 5
 
-select * from Who.SPActiveOutput;
+select * from Who.SPWhoIsActiveOutput;
 
 /* Perhaps the most important input parameter that for anyone who wants to know more about sp_whoisactive */
 
