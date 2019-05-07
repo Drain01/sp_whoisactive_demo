@@ -112,11 +112,3 @@ select * from Who.SPActiveOutput;
 /* Perhaps the most important input parameter that for anyone who wants to know more about sp_whoisactive */
 
 exec sp_whoisactive @help = 1;
-
-/* Additional options to create scenarios for
-
-@filter
-
-@output_column_list
-
-@return_schema and @destination_table */
